@@ -55,4 +55,4 @@ if [[ "$COMMAND_TYPE" == "last" ]]; then
     for file in "${FILES[@]}"; do
         last -f "$file" 2>/dev/null
     done
-fi
+fi  
