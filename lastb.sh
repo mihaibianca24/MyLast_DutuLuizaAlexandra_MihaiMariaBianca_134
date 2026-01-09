@@ -49,6 +49,7 @@ process_command() {
     
     FILES=()
     for i in 4 3 2 1; do
+        [[ -f "${base_file}.${i}.gz" ]] && FILES+=("${base_file}.${i}.gz")
         [[ -f "${base_file}.${i}" ]] && FILES+=("${base_file}.${i}")
     done
     FILES+=("$base_file")
@@ -59,7 +60,14 @@ process_command() {
     [[ -n "$SHOW_TIME" ]] && ARGS="$ARGS -F"
     
     for file in "${FILES[@]}"; do
-        $cmd $ARGS -f "$file" 2>/dev/null
+        if [[ "$file" == *.gz]]; then
+            TEMP=$(mktemp)
+            zcat "$file" > "$TEMP" 2>/dev/null
+            $cmd $ARGS -f "$TEMP" 2>/dev/null
+            rm -f "$TEMP"
+        else
+            $cmd $ARGS -f "$file" 2>/dev/null
+        fi
     done | if [[ -n "$NUM_LINES" ]]; then
         head -n "$NUM_LINES"
     else
