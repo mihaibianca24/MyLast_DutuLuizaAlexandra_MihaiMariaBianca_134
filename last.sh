@@ -51,8 +51,17 @@ if [[ "$COMMAND_TYPE" == "last" ]]; then
         [[ -f "${BASE_FILE}.${i}" ]] && FILES+=("${BASE_FILE}.${i}")
     done
     FILES+=("$BASE_FILE")
+
+    ARGS=""
+    [[ -n "$PRINT_HOSTNAME" ]] && ARGS="$ARGS -w"
+    [[ -n "$SHOW_SYSTEM" ]] && ARGS="$ARGS -x"
+    [[ -n "$SHOW_TIME" ]] && ARGS="$ARGS -F"
     
     for file in "${FILES[@]}"; do
         last -f "$file" 2>/dev/null
-    done
+    done | if [[ -n "$NUM_LINES" ]]; then
+        head -n "$NUM_LINES"
+    else
+        cat
+    fi
 fi  
