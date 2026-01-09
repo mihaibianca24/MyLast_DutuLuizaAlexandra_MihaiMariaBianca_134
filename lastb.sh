@@ -47,26 +47,31 @@ process_command() {
     local base_file=$1
     local cmd=$2
     
-    FILES=()
+    if [[ ! -r "$base_file" ]]; then
+        echo "Eroare: Nu se poate citi  $base_file (incercati cu sudo)" >&2
+        exit 1
+    fi
+    local files=()
     for i in 4 3 2 1; do
-        [[ -f "${base_file}.${i}.gz" ]] && FILES+=("${base_file}.${i}.gz")
-        [[ -f "${base_file}.${i}" ]] && FILES+=("${base_file}.${i}")
+        [[ -f "${base_file}.${i}.gz" ]] && files+=("${base_file}.${i}.gz")
+        [[ -f "${base_file}.${i}" ]] && files+=("${base_file}.${i}")
     done
-    FILES+=("$base_file")
+    files+=("$base_file")
     
-    ARGS=""
-    [[ -n "$PRINT_HOSTNAME" ]] && ARGS="$ARGS -w"
-    [[ -n "$SHOW_SYSTEM" ]] && ARGS="$ARGS -x"
-    [[ -n "$SHOW_TIME" ]] && ARGS="$ARGS -F"
-    
-    for file in "${FILES[@]}"; do
-        if [[ "$file" == *.gz]]; then
-            TEMP=$(mktemp)
-            zcat "$file" > "$TEMP" 2>/dev/null
-            $cmd $ARGS -f "$TEMP" 2>/dev/null
-            rm -f "$TEMP"
+    local args=""
+    [[ -n "$PRINT_HOSTNAME" ]] && args="$args -w"
+    [[ -n "$SHOW_SYSTEM" ]] && args="$args -x"
+    [[ -n "$SHOW_TIME" ]] && args="$args -F"
+
+    for file in "${files[@]}"; do
+        if [[ "$file" == *.gz ]]; then
+            local temp=$(mktemp)
+            if zcat "$file" > "$temp" 2>/dev/null; then
+                 $cmd $args -f "$temp" 2>/dev/null
+            fi
+            rm -f "$temp"
         else
-            $cmd $ARGS -f "$file" 2>/dev/null
+            $cmd $args -f "$file" 2>/dev/null
         fi
     done | if [[ -n "$NUM_LINES" ]]; then
         head -n "$NUM_LINES"
